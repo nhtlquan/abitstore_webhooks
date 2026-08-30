@@ -2,7 +2,7 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const STATUS_MAP = {
-  "blacklist": { name: "BLACKLIST", color: "#737373" },
+  "AutoCreated": { name: "KHÁCH MỚI", color: "#00a65a" },
   "Chochuyenkhoan": { name: "CHỜ CHUYỂN KHOẢN", color: "#efb71a" },
   "Chonhaphang": { name: "CHỜ NHẬP HÀNG", color: "#efb71a" },
   "Choship": { name: "CHỜ SHIP", color: "#efb71a" },
@@ -17,7 +17,6 @@ const STATUS_MAP = {
   "Huyvandon": { name: "HUỶ VẬN ĐƠN", color: "#d52609" },
   "Huy DNX": { name: "HỦY ĐƠN", color: "#d52609" },
   "Yeucauhuy": { name: "KHÁCH - YÊU CẦU HỦY", color: "#d52609" },
-  "AutoCreated": { name: "KHÁCH MỚI", color: "#00a65a" },
   "Khonglayduochang": { name: "KHÔNG LẤY ĐƯỢC HÀNG", color: "#efb71a" },
   "Khongnghemay": { name: "KHÔNG NGHE MÁY", color: "#d52609" },
   "Lead": { name: "LEAD", color: "#00a65a" },
@@ -71,9 +70,9 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;");
 }
 
-function colorEmoji(hex) {
+function statusIcon(hex) {
   const h = String(hex || "").toLowerCase();
-  if (h === "#d52609" || h === "#c50bd1") return "🔴";
+  if (h === "#d52609") return "🔴";
   if (h === "#efb71a" || h === "#eb6b43") return "🟠";
   if (h === "#00a65a" || h === "#77ab5c" || h === "#006633") return "🟢";
   if (h === "#3dbcb3" || h === "#2e96f7" || h === "#243ae0" || h === "#044284") return "🔵";
@@ -86,6 +85,7 @@ function formatDateTime(value) {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
+
   const parts = new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
@@ -93,9 +93,9 @@ function formatDateTime(value) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: false
   }).formatToParts(d);
+
   const get = type => parts.find(p => p.type === type)?.value || "";
   return `${get("hour")}:${get("minute")} - ${get("day")}/${get("month")}/${get("year")}`;
 }
@@ -105,11 +105,13 @@ function buildCaption(body, products) {
     name: String(body.invoice_status || "KHÔNG RÕ").toUpperCase(),
     color: "#737373"
   };
+
   const shop = body.order_source_name || body.ecom_username || body.channel || "Không rõ";
   const orderId = body.name || body.eoi_order_id || body.invoice_no || "";
 
-  // Block 1: status, product, money.
-  let caption = `${colorEmoji(status.color)} <b>${escapeHtml(status.name)}</b>\n\n`;
+  // Block 1
+  let caption = `${statusIcon(status.color)} <b>${escapeHtml(status.name)}</b>\n\n`;
+
   if (products.length) {
     for (const p of products) {
       const productName = p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
@@ -118,16 +120,21 @@ function buildCaption(body, products) {
   } else {
     caption += `📦 Không có dữ liệu sản phẩm\n`;
   }
-  if (body.total !== undefined && body.total !== null) caption += `KH Trả: ${formatVND(body.total)}\n`;
-  if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) caption += `Doanh thu: ${formatVND(body.ecom_doanhso)}`;
 
-  // Block 2: shop + order number.
-  caption += `\n\n`;
+  if (body.total !== undefined && body.total !== null) {
+    caption += `KH Trả: ${formatVND(body.total)}\n`;
+  }
+  if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) {
+    caption += `Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
+  }
+
+  // Block 2
+  caption += `\n`;
   caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
-  if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}`;
+  if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}\n`;
 
-  // Block 3: receiver + address + time.
-  caption += `\n\n`;
+  // Block 3
+  caption += `\n`;
   if (body.receiver || body.phone_number) {
     caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
     if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
@@ -136,7 +143,10 @@ function buildCaption(body, products) {
   if (body.address) caption += `Địa chỉ: ${escapeHtml(body.address)}\n`;
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
-  if (dateTime) caption += `⏰ ${escapeHtml(dateTime)}`;
+  if (dateTime) caption += `${escapeHtml(dateTime)}\n`;
+
+  // Subtle separator at the end of each message to make consecutive orders easier to scan.
+  caption += `\n────────────`;
 
   return caption.trim();
 }
@@ -158,6 +168,7 @@ async function sendOnePush(body) {
   const caption = buildCaption(body, products);
   const imageUrl = products[0]?.image_info?.image_url;
 
+  // Exactly one Telegram push per webhook.
   if (imageUrl && caption.length <= 1024) {
     await telegramRequest("sendPhoto", {
       chat_id: TELEGRAM_CHAT_ID,
@@ -178,11 +189,13 @@ async function sendOnePush(body) {
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "11.0" });
+    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "12.0" });
   }
+
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
+
   try {
     await sendOnePush(req.body ?? {});
     return res.status(200).json({ ok: true, telegram: "sent", pushes: 1 });
