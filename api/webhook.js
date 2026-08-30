@@ -2,17 +2,47 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const STATUS_MAP = {
-  "AutoCreated": { name: "KHÁCH MỚI", color: "#00a65a" },
+  "blacklist": { name: "BLACKLIST", color: "#737373" },
   "Chochuyenkhoan": { name: "CHỜ CHUYỂN KHOẢN", color: "#efb71a" },
   "Chonhaphang": { name: "CHỜ NHẬP HÀNG", color: "#efb71a" },
   "Choship": { name: "CHỜ SHIP", color: "#efb71a" },
+  "Chuachot": { name: "CHƯA CHỐT ĐƯỢC", color: "#77ab5c" },
+  "Chuaphatduoc": { name: "CHƯA PHÁT ĐƯỢC", color: "#efb71a" },
+  "Chuyenhang": { name: "CHUYỂN HÀNG", color: "#efb71a" },
+  "Chuyenhoan": { name: "CHUYỂN HOÀN", color: "#9e55a4" },
+  "Chuyenkhoanloi": { name: "CHUYỂN KHOẢN LỖI", color: "#d52609" },
+  "CODDathutien": { name: "COD-ĐÃ THU TIỀN", color: "#3dbcb3" },
+  "Giaohangcovande": { name: "GIAO HÀNG - CÓ VẤN ĐỀ", color: "#c50bd1" },
+  "Hengoilai": { name: "HẸN GỌI LẠI", color: "#efb71a" },
   "Huyvandon": { name: "HUỶ VẬN ĐƠN", color: "#d52609" },
+  "Huy DNX": { name: "HỦY ĐƠN", color: "#d52609" },
   "Yeucauhuy": { name: "KHÁCH - YÊU CẦU HỦY", color: "#d52609" },
-  "Thanhcong": { name: "THÀNH CÔNG", color: "#243ae0" },
-  "Dadoisoat": { name: "ĐÃ ĐỐI SOÁT", color: "#044284" },
+  "AutoCreated": { name: "KHÁCH MỚI", color: "#00a65a" },
+  "Khonglayduochang": { name: "KHÔNG LẤY ĐƯỢC HÀNG", color: "#efb71a" },
+  "Khongnghemay": { name: "KHÔNG NGHE MÁY", color: "#d52609" },
+  "Lead": { name: "LEAD", color: "#00a65a" },
+  "Matdonhang": { name: "MẤT ĐƠN HÀNG", color: "#d52609" },
+  "Muatructiep": { name: "MUA TRỰC TIẾP", color: "#3dbcb3" },
+  "Daphathoanthanhcong": { name: "PHÁT HOÀN THÀNH CÔNG", color: "#9e55a4" },
   "Daphatthanhcong": { name: "PHÁT THÀNH CÔNG", color: "#3dbcb3" },
+  "Saiso": { name: "SAI SỐ", color: "#efb71a" },
+  "Shipnoithanh": { name: "SHIP NỘI THÀNH", color: "#efb71a" },
+  "Thanhcong": { name: "THÀNH CÔNG", color: "#243ae0" },
+  "Tratienchonguoigui": { name: "TRẢ TIỀN NGƯỜI GỬI", color: "#3dbcb3" },
+  "Trungdon": { name: "TRÙNG ĐƠN", color: "#d52609" },
+  "Tuchoinhan": { name: "TỪ CHỐI NHẬN", color: "#9e55a4" },
+  "Dachot": { name: "ĐÃ CHỐT", color: "#efb71a" },
+  "Sent": { name: "ĐÃ GỬI", color: "#efb71a" },
+  "Daguibuudien": { name: "ĐÃ GỬI BĐ", color: "#2e96f7" },
+  "Dain": { name: "ĐÃ IN", color: "#006633" },
   "Dathutien": { name: "ĐÃ THU TIỀN", color: "#3dbcb3" },
   "Deleted": { name: "ĐÃ XOÁ ĐƠN", color: "#d52609" },
+  "Dadoisoat": { name: "ĐÃ ĐỐI SOÁT", color: "#044284" },
+  "Dadoisoatmotphan": { name: "ĐÃ ĐỐI SOÁT - MỘT PHẦN", color: "#8e44ad" },
+  "Dadonggoi": { name: "ĐÃ ĐÓNG GÓI", color: "#452b87" },
+  "Dathangtruoc": { name: "ĐẶT HÀNG TRƯỚC", color: "#009688" },
+  "Approved": { name: "ĐỀ NGHỊ XUẤT", color: "#efb71a" },
+  "Dienthoaiban": { name: "ĐIỆN THOẠI BẬN", color: "#efb71a" },
   "Donhoatoc": { name: "ĐƠN HỎA TỐC ⚡", color: "#eb6b43" }
 };
 
@@ -43,13 +73,13 @@ function escapeHtml(value) {
 
 function statusIcon(hex) {
   const h = String(hex || "").toLowerCase();
-  // Compact monochrome-style symbols; avoids oversized emoji while keeping visual cues.
-  if (h === "#d52609") return "●";
-  if (h === "#efb71a") return "◐";
-  if (h === "#00a65a" || h === "#77ab5c") return "●";
-  if (h === "#3dbcb3" || h === "#2e96f7" || h === "#243ae0" || h === "#044284") return "●";
-  if (h === "#9e55a4" || h === "#8e44ad" || h === "#452b87") return "●";
-  return "•";
+  if (h === "#d52609" || h === "#c50bd1") return "🔴";
+  if (h === "#efb71a" || h === "#eb6b43") return "🟠";
+  if (h === "#00a65a" || h === "#77ab5c" || h === "#006633") return "🟢";
+  if (h === "#3dbcb3" || h === "#2e96f7" || h === "#243ae0" || h === "#044284") return "🔵";
+  if (h === "#9e55a4" || h === "#8e44ad" || h === "#452b87") return "🟣";
+  if (h === "#737373") return "⚫";
+  return "⚪";
 }
 
 function formatDateTime(value) {
@@ -81,42 +111,32 @@ function buildCaption(body, products) {
   const shop = body.order_source_name || body.ecom_username || body.channel || "Không rõ";
   const orderId = body.name || body.eoi_order_id || body.invoice_no || "";
 
-  // Block 1: status, shop, order number.
-  let caption = `${statusIcon(status.color)} <b>${escapeHtml(status.name)}</b>\n`;
-  caption += `⌂ Shop: ${escapeHtml(shop)}\n`;
-  if (orderId) caption += `# Mã đơn: ${escapeHtml(orderId)}\n`;
+  const productLines = products.length
+    ? products.map(p => `📦 ${escapeHtml(p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm")}`).join("\n")
+    : "📦 Không có dữ liệu sản phẩm";
 
-  // Block 2: receiver.
-  caption += `\n`;
-  if (body.receiver || body.phone_number || body.address) {
-    caption += `@ Người nhận: ${escapeHtml(body.receiver || "")}`;
+  // Exactly 3 compact blocks, with one blank line between blocks.
+  let caption = `${statusIcon(status.color)} <b>${escapeHtml(status.name)}</b>\n`;
+  caption += `${productLines}\n`;
+  if (body.total !== undefined && body.total !== null) caption += `💳 KH Trả: ${formatVND(body.total)}\n`;
+  if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) caption += `💰 Doanh thu: ${formatVND(body.ecom_doanhso)}`;
+
+  caption += `\n\n`;
+  caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
+  if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}`;
+
+  caption += `\n\n`;
+  if (body.receiver || body.phone_number) {
+    caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
     if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
-    if (body.address) caption += ` (${escapeHtml(body.address)})`;
     caption += `\n`;
   }
-
-  // Block 3: products + money.
-  caption += `\n`;
-  if (products.length) {
-    for (const p of products) {
-      const productName = p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
-      caption += `› ${escapeHtml(productName)}\n`;
-    }
-  } else {
-    caption += `› Không có dữ liệu sản phẩm\n`;
-  }
-
-  if (body.total !== undefined && body.total !== null) {
-    caption += `₫ KH Trả: ${formatVND(body.total)}\n`;
-  }
-  if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) {
-    caption += `↗ Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
-  }
+  if (body.address) caption += `📍 Địa chỉ: ${escapeHtml(body.address)}\n`;
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
-  if (dateTime) caption += `\n◷ ${escapeHtml(dateTime)}`;
+  if (dateTime) caption += `⏰ ${escapeHtml(dateTime)}`;
 
-  return caption;
+  return caption.trim();
 }
 
 async function telegramRequest(method, payload) {
@@ -136,7 +156,6 @@ async function sendOnePush(body) {
   const caption = buildCaption(body, products);
   const imageUrl = products[0]?.image_info?.image_url;
 
-  // Exactly one Telegram push. Prefer one photo message containing all order details.
   if (imageUrl && caption.length <= 1024) {
     await telegramRequest("sendPhoto", {
       chat_id: TELEGRAM_CHAT_ID,
@@ -157,7 +176,7 @@ async function sendOnePush(body) {
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "7.1" });
+    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "10.0" });
   }
 
   if (req.method !== "POST") {
