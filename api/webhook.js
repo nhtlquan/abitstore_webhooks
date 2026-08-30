@@ -109,8 +109,8 @@ function buildCaption(body, products) {
   const shop = body.order_source_name || body.ecom_username || body.channel || "Không rõ";
   const orderId = body.name || body.eoi_order_id || body.invoice_no || "";
 
-  // Block 1
-  let caption = `${statusIcon(status.color)} <b>${escapeHtml(status.name)}</b>\n\n`;
+  // Block 1: no blank line after status.
+  let caption = `${statusIcon(status.color)} <b>${escapeHtml(status.name)}</b>\n`;
 
   if (products.length) {
     for (const p of products) {
@@ -125,16 +125,16 @@ function buildCaption(body, products) {
     caption += `KH Trả: ${formatVND(body.total)}\n`;
   }
   if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) {
-    caption += `Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
+    caption += `Doanh thu: ${formatVND(body.ecom_doanhso)}`;
   }
 
-  // Block 2
-  caption += `\n`;
+  // Block 2.
+  caption += `\n\n`;
   caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
-  if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}\n`;
+  if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}`;
 
-  // Block 3
-  caption += `\n`;
+  // Block 3.
+  caption += `\n\n`;
   if (body.receiver || body.phone_number) {
     caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
     if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
@@ -143,10 +143,7 @@ function buildCaption(body, products) {
   if (body.address) caption += `Địa chỉ: ${escapeHtml(body.address)}\n`;
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
-  if (dateTime) caption += `${escapeHtml(dateTime)}\n`;
-
-  // Subtle separator at the end of each message to make consecutive orders easier to scan.
-  caption += `\n────────────`;
+  if (dateTime) caption += `${escapeHtml(dateTime)}`;
 
   return caption.trim();
 }
@@ -168,7 +165,6 @@ async function sendOnePush(body) {
   const caption = buildCaption(body, products);
   const imageUrl = products[0]?.image_info?.image_url;
 
-  // Exactly one Telegram push per webhook.
   if (imageUrl && caption.length <= 1024) {
     await telegramRequest("sendPhoto", {
       chat_id: TELEGRAM_CHAT_ID,
@@ -189,7 +185,7 @@ async function sendOnePush(body) {
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "12.0" });
+    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "15.0" });
   }
 
   if (req.method !== "POST") {
