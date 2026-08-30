@@ -71,7 +71,7 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;");
 }
 
-function statusIcon(hex) {
+function colorEmoji(hex) {
   const h = String(hex || "").toLowerCase();
   if (h === "#d52609" || h === "#c50bd1") return "🔴";
   if (h === "#efb71a" || h === "#eb6b43") return "🟠";
@@ -86,7 +86,6 @@ function formatDateTime(value) {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
-
   const parts = new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
@@ -97,7 +96,6 @@ function formatDateTime(value) {
     second: "2-digit",
     hour12: false
   }).formatToParts(d);
-
   const get = type => parts.find(p => p.type === type)?.value || "";
   return `${get("hour")}:${get("minute")} - ${get("day")}/${get("month")}/${get("year")}`;
 }
@@ -107,31 +105,35 @@ function buildCaption(body, products) {
     name: String(body.invoice_status || "KHÔNG RÕ").toUpperCase(),
     color: "#737373"
   };
-
   const shop = body.order_source_name || body.ecom_username || body.channel || "Không rõ";
   const orderId = body.name || body.eoi_order_id || body.invoice_no || "";
 
-  const productLines = products.length
-    ? products.map(p => `📦 ${escapeHtml(p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm")}`).join("\n")
-    : "📦 Không có dữ liệu sản phẩm";
+  // Block 1: status, product, money.
+  let caption = `${colorEmoji(status.color)} <b>${escapeHtml(status.name)}</b>\n\n`;
+  if (products.length) {
+    for (const p of products) {
+      const productName = p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
+      caption += `📦 ${escapeHtml(productName)}\n`;
+    }
+  } else {
+    caption += `📦 Không có dữ liệu sản phẩm\n`;
+  }
+  if (body.total !== undefined && body.total !== null) caption += `KH Trả: ${formatVND(body.total)}\n`;
+  if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) caption += `Doanh thu: ${formatVND(body.ecom_doanhso)}`;
 
-  // Exactly 3 compact blocks, with one blank line between blocks.
-  let caption = `${statusIcon(status.color)} <b>${escapeHtml(status.name)}</b>\n`;
-  caption += `${productLines}\n`;
-  if (body.total !== undefined && body.total !== null) caption += `💳 KH Trả: ${formatVND(body.total)}\n`;
-  if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) caption += `💰 Doanh thu: ${formatVND(body.ecom_doanhso)}`;
-
+  // Block 2: shop + order number.
   caption += `\n\n`;
   caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
   if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}`;
 
+  // Block 3: receiver + address + time.
   caption += `\n\n`;
   if (body.receiver || body.phone_number) {
     caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
     if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
     caption += `\n`;
   }
-  if (body.address) caption += `📍 Địa chỉ: ${escapeHtml(body.address)}\n`;
+  if (body.address) caption += `Địa chỉ: ${escapeHtml(body.address)}\n`;
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
   if (dateTime) caption += `⏰ ${escapeHtml(dateTime)}`;
@@ -176,13 +178,11 @@ async function sendOnePush(body) {
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "10.0" });
+    return res.status(200).json({ ok: true, service: "AbitStore Webhook -> Telegram", version: "11.0" });
   }
-
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
-
   try {
     await sendOnePush(req.body ?? {});
     return res.status(200).json({ ok: true, telegram: "sent", pushes: 1 });
