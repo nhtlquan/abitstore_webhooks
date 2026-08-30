@@ -1,5 +1,5 @@
-const TELEGRAM_BOT_TOKEN = "8249677347:AAHDmaxHLydw9re1PJq-u-kYNyyl3-2Wf7s";
-const TELEGRAM_CHAT_ID = "1323840855";
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const STATUS_MAP = {
   "blacklist": { name: "BLACKLIST", color: "#737373" },
