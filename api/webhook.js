@@ -86,7 +86,6 @@ function formatDateTime(value) {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
-
   const parts = new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
@@ -97,7 +96,6 @@ function formatDateTime(value) {
     second: "2-digit",
     hour12: false
   }).formatToParts(d);
-
   const get = type => parts.find(p => p.type === type)?.value || "";
   return `${get("hour")}:${get("minute")}:${get("second")} - ${get("day")}/${get("month")}/${get("year")}`;
 }
@@ -107,15 +105,15 @@ function buildCaption(body, products) {
     name: String(body.invoice_status || "KHÔNG RÕ").toUpperCase(),
     color: "#737373"
   };
-
   const shop = body.order_source_name || body.ecom_username || body.channel || "Không rõ";
   const orderId = body.name || body.eoi_order_id || body.invoice_no || "";
 
-  let caption = `${colorEmoji(status.color)} <b>${escapeHtml(status.name)}</b>\n\n`;
+  // 3 visually separated blocks, matching the requested layout.
+  let caption = `${colorEmoji(status.color)} <b>${escapeHtml(status.name)}</b>\n`;
   caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
-
   if (orderId) caption += `🧾 Mã đơn: ${escapeHtml(orderId)}\n`;
 
+  caption += `\n`;
   if (body.receiver || body.phone_number || body.address) {
     caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
     if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
@@ -123,6 +121,7 @@ function buildCaption(body, products) {
     caption += `\n`;
   }
 
+  caption += `\n`;
   if (products.length) {
     for (const p of products) {
       const productName = p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
@@ -135,7 +134,6 @@ function buildCaption(body, products) {
   if (body.total !== undefined && body.total !== null) {
     caption += `💳 KH Trả: ${formatVND(body.total)}\n`;
   }
-
   if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) {
     caption += `💰 Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
   }
@@ -163,6 +161,7 @@ async function sendOnePush(body) {
   const caption = buildCaption(body, products);
   const imageUrl = products[0]?.image_info?.image_url;
 
+  // Exactly ONE Telegram push. Prefer one photo message containing the full order caption.
   if (imageUrl && caption.length <= 1024) {
     await telegramRequest("sendPhoto", {
       chat_id: TELEGRAM_CHAT_ID,
