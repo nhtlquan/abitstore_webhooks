@@ -114,8 +114,13 @@ function buildCaption(body, products) {
   let caption = `${colorEmoji(status.color)} <b>${escapeHtml(status.name)}</b>\n\n`;
   caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
 
-  if (orderId) {
-    caption += `🧾 Mã đơn: ${escapeHtml(orderId)}\n`;
+  if (orderId) caption += `🧾 Mã đơn: ${escapeHtml(orderId)}\n`;
+
+  if (body.receiver || body.phone_number || body.address) {
+    caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
+    if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
+    if (body.address) caption += ` (${escapeHtml(body.address)})`;
+    caption += `\n`;
   }
 
   if (products.length) {
@@ -133,13 +138,6 @@ function buildCaption(body, products) {
 
   if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) {
     caption += `💰 Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
-  }
-
-  if (body.receiver || body.phone_number || body.address) {
-    caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
-    if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
-    if (body.address) caption += ` (${escapeHtml(body.address)})`;
-    caption += `\n`;
   }
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
@@ -188,7 +186,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       service: "AbitStore Webhook -> Telegram",
-      version: "5.0"
+      version: "6.0"
     });
   }
 
