@@ -87,7 +87,6 @@ function formatDateTime(value) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
 
-  // AbitStore sends ISO UTC timestamps. Display in Vietnam time (UTC+7).
   const parts = new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
@@ -121,8 +120,7 @@ function buildCaption(body, products) {
 
   if (products.length) {
     for (const p of products) {
-      const productName =
-        p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
+      const productName = p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
       caption += `📦 ${escapeHtml(productName)}\n`;
     }
   } else {
@@ -139,41 +137,26 @@ function buildCaption(body, products) {
 
   if (body.receiver || body.phone_number || body.address) {
     caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
-
-    if (body.phone_number) {
-      caption += ` - ${escapeHtml(body.phone_number)}`;
-    }
-
-    if (body.address) {
-      caption += ` (${escapeHtml(body.address)})`;
-    }
-
+    if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
+    if (body.address) caption += ` (${escapeHtml(body.address)})`;
     caption += `\n`;
   }
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
-  if (dateTime) {
-    caption += `⏰ ${escapeHtml(dateTime)}`;
-  }
+  if (dateTime) caption += `⏰ ${escapeHtml(dateTime)}`;
 
   return caption;
 }
 
 async function telegramRequest(method, payload) {
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`;
-
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload)
   });
-
   const text = await response.text();
-
-  if (!response.ok) {
-    throw new Error(`Telegram error ${response.status}: ${text}`);
-  }
-
+  if (!response.ok) throw new Error(`Telegram error ${response.status}: ${text}`);
   return JSON.parse(text);
 }
 
@@ -182,8 +165,6 @@ async function sendOnePush(body) {
   const caption = buildCaption(body, products);
   const imageUrl = products[0]?.image_info?.image_url;
 
-  // One Telegram notification only.
-  // Prefer a photo message so the product image appears inside the notification.
   if (imageUrl && caption.length <= 1024) {
     await telegramRequest("sendPhoto", {
       chat_id: TELEGRAM_CHAT_ID,
@@ -212,26 +193,14 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({
-      ok: false,
-      error: "Method Not Allowed"
-    });
+    return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
 
   try {
     await sendOnePush(req.body ?? {});
-
-    return res.status(200).json({
-      ok: true,
-      telegram: "sent",
-      pushes: 1
-    });
+    return res.status(200).json({ ok: true, telegram: "sent", pushes: 1 });
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    });
+    return res.status(500).json({ ok: false, error: error.message });
   }
 }
