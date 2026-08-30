@@ -71,17 +71,6 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;");
 }
 
-function colorEmoji(hex) {
-  const h = String(hex || "").toLowerCase();
-  if (h === "#d52609" || h === "#c50bd1") return "🔴";
-  if (h === "#efb71a" || h === "#eb6b43") return "🟠";
-  if (h === "#00a65a" || h === "#77ab5c" || h === "#006633") return "🟢";
-  if (h === "#3dbcb3" || h === "#2e96f7" || h === "#243ae0" || h === "#044284") return "🔵";
-  if (h === "#9e55a4" || h === "#8e44ad" || h === "#452b87") return "🟣";
-  if (h === "#737373") return "⚫";
-  return "⚪";
-}
-
 function formatDateTime(value) {
   if (!value) return "";
   const d = new Date(value);
@@ -105,17 +94,18 @@ function buildCaption(body, products) {
     name: String(body.invoice_status || "KHÔNG RÕ").toUpperCase(),
     color: "#737373"
   };
+
   const shop = body.order_source_name || body.ecom_username || body.channel || "Không rõ";
   const orderId = body.name || body.eoi_order_id || body.invoice_no || "";
 
-  // 3 visually separated blocks, matching the requested layout.
-  let caption = `${colorEmoji(status.color)} <b>${escapeHtml(status.name)}</b>\n`;
-  caption += `🏪 Shop: ${escapeHtml(shop)}\n`;
-  if (orderId) caption += `🧾 Mã đơn: ${escapeHtml(orderId)}\n`;
+  // Clean layout: three visually separated blocks, with minimal/no oversized emoji icons.
+  let caption = `<b>${escapeHtml(status.name)}</b>\n`;
+  caption += `Shop: ${escapeHtml(shop)}\n`;
+  if (orderId) caption += `Mã đơn: ${escapeHtml(orderId)}\n`;
 
   caption += `\n`;
   if (body.receiver || body.phone_number || body.address) {
-    caption += `👤 Người nhận: ${escapeHtml(body.receiver || "")}`;
+    caption += `Người nhận: ${escapeHtml(body.receiver || "")}`;
     if (body.phone_number) caption += ` - ${escapeHtml(body.phone_number)}`;
     if (body.address) caption += ` (${escapeHtml(body.address)})`;
     caption += `\n`;
@@ -125,21 +115,21 @@ function buildCaption(body, products) {
   if (products.length) {
     for (const p of products) {
       const productName = p.item_name || p.model_name || p.item_sku || "Không rõ sản phẩm";
-      caption += `📦 ${escapeHtml(productName)}\n`;
+      caption += `${escapeHtml(productName)}\n`;
     }
   } else {
-    caption += `📦 Không có dữ liệu sản phẩm\n`;
+    caption += `Không có dữ liệu sản phẩm\n`;
   }
 
   if (body.total !== undefined && body.total !== null) {
-    caption += `💳 KH Trả: ${formatVND(body.total)}\n`;
+    caption += `KH Trả: ${formatVND(body.total)}\n`;
   }
   if (body.ecom_doanhso !== undefined && body.ecom_doanhso !== null) {
-    caption += `💰 Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
+    caption += `Doanh thu: ${formatVND(body.ecom_doanhso)}\n`;
   }
 
   const dateTime = formatDateTime(body.created_at || body.updated_at || body.invoice_date);
-  if (dateTime) caption += `⏰ ${escapeHtml(dateTime)}`;
+  if (dateTime) caption += `\n${escapeHtml(dateTime)}`;
 
   return caption;
 }
@@ -185,7 +175,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       service: "AbitStore Webhook -> Telegram",
-      version: "6.0"
+      version: "7.0"
     });
   }
 
